@@ -333,6 +333,10 @@ local function schedule()
   end)
 end
 
+function mod.schedule()
+  schedule()
+end
+
 function mod.next()
   if not copilot._copilot.params and not should_auto_trigger() then
     schedule()
