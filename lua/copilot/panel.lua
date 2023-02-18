@@ -55,7 +55,7 @@ local function get_display_lines(text)
 
   if extra_indent > 0 then
     for i, line in ipairs(lines) do
-      lines[i] = line:sub(1, extra_indent)
+      lines[i] = line:sub(extra_indent + 1)
     end
   end
 
@@ -277,28 +277,26 @@ local function set_keymap(bufnr)
 end
 
 function panel:ensure_bufnr()
-  if self.bufnr and vim.api.nvim_buf_is_valid(self.bufnr) then
-    return
+  if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
+    self.bufnr = vim.api.nvim_create_buf(false, true)
+
+    for name, value in pairs({
+      bufhidden = "hide",
+      buflisted = false,
+      buftype = "nofile",
+      modifiable = false,
+      readonly = true,
+      swapfile = false,
+      undolevels = 0,
+    }) do
+      vim.api.nvim_buf_set_option(self.bufnr, name, value)
+    end
+
+    set_keymap(self.bufnr)
   end
-
-  self.bufnr = vim.api.nvim_create_buf(false, true)
-
-  for name, value in pairs({
-    bufhidden = "hide",
-    buflisted = false,
-    buftype = "nofile",
-    filetype = self.filetype,
-    modifiable = false,
-    readonly = true,
-    swapfile = false,
-    undolevels = 0,
-  }) do
-    vim.api.nvim_buf_set_option(self.bufnr, name, value)
-  end
-
-  set_keymap(self.bufnr)
 
   vim.api.nvim_buf_set_name(self.bufnr, self.panel_uri)
+  vim.api.nvim_buf_set_option(self.bufnr, "filetype", self.filetype)
 end
 
 function panel:ensure_winid()
