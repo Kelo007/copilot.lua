@@ -4,7 +4,7 @@ local default_config = {
   panel = {
     enabled = true,
     auto_refresh = false,
-    ---@type table<'accept'|'next'|'prev'|'dismiss', false|string>
+    ---@type table<'jump_prev'|'jump_next'|'accept'|'refresh'|'open', false|string>
     keymap = {
       jump_prev = "[[",
       jump_next = "]]",
@@ -14,15 +14,15 @@ local default_config = {
     },
     layout = {
       position = "bottom",
-      ratio = 0.4
-    }
+      ratio = 0.4,
+    },
   },
   ---@class copilot_config_suggestion
   suggestion = {
     enabled = true,
     auto_trigger = false,
     debounce = 75,
-    ---@type table<'accept'|'next'|'prev'|'dismiss', false|string>
+    ---@type table<'accept'|'accept_word'|'accept_line'|'next'|'prev'|'dismiss', false|string>
     keymap = {
       accept = "<M-l>",
       accept_word = false,
@@ -46,7 +46,7 @@ local mod = {
 
 function mod.setup(opts)
   if mod.config then
-    vim.notify("[copilot] config is already set", vim.log.levels.WARN)
+    vim.notify("[Copilot] config is already set", vim.log.levels.WARN)
     return mod.config
   end
 
@@ -68,7 +68,11 @@ end
 
 ---@param key? string
 function mod.get(key)
-  if mod.config and key then
+  if not mod.config then
+    error("[Copilot] not initialized")
+  end
+
+  if key then
     return mod.config[key]
   end
 

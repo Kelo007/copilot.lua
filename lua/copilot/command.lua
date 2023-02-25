@@ -49,9 +49,14 @@ function mod.status()
     vim.api.nvim_echo(lines, true, {})
   end
 
+  if c.is_disabled() then
+    flush_lines("Offline")
+    return
+  end
+
   local client = c.get()
   if not client then
-    flush_lines("Not running")
+    flush_lines("Not Started")
     return
   end
 
@@ -100,20 +105,15 @@ function mod.status()
 end
 
 ---@param opts? { force?: boolean }
-function mod.toggle(opts)
+function mod.attach(opts)
   opts = opts or {}
-
-  if c.buf_is_attached(0) then
-    c.buf_detach()
-    return
-  end
 
   if not opts.force then
     local should_attach, no_attach_reason = u.should_attach()
     if not should_attach then
       vim.api.nvim_echo({
         { "[Copilot] " .. no_attach_reason .. "\n" },
-        { "[Copilot] to force enable, run ':Copilot! toggle'" },
+        { "[Copilot] to force attach, run ':Copilot! attach'" },
       }, true, {})
       return
     end
@@ -122,6 +122,36 @@ function mod.toggle(opts)
   end
 
   c.buf_attach(opts.force)
+end
+
+function mod.detach()
+  if c.buf_is_attached(0) then
+    c.buf_detach()
+  end
+end
+
+---@param opts? { force?: boolean }
+function mod.toggle(opts)
+  opts = opts or {}
+
+  if c.buf_is_attached(0) then
+    mod.detach()
+    return
+  end
+
+  mod.attach(opts)
+end
+
+function mod.enable()
+  c.setup()
+  require("copilot.panel").setup()
+  require("copilot.suggestion").setup()
+end
+
+function mod.disable()
+  c.teardown()
+  require("copilot.panel").teardown()
+  require("copilot.suggestion").teardown()
 end
 
 return mod
