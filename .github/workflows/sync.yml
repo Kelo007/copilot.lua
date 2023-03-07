@@ -18,3 +18,4 @@ jobs:
           head: master
           ignore_fail: true
           retries: 0
+          retry_after: 0
