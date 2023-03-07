@@ -17,4 +17,4 @@ jobs:
           base: master
           head: master
           ignore_fail: true
-          retries: 1
+          retries: 0
