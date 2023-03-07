@@ -2,7 +2,7 @@ name: Sync Fork
 
 on:
   schedule:
-    - cron: '0 0 * * *' # every 30 minutes
+    - cron: '0 0 * * *' # every day
   workflow_dispatch: # on button click
 
 jobs:
@@ -16,3 +16,4 @@ jobs:
           owner: zbirenbaum
           base: master
           head: master
+          ignore_fail: true
