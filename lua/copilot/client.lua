@@ -5,10 +5,13 @@ local util = require("copilot.util")
 local is_disabled = false
 
 local M = {
-  id = nil,
   augroup = "copilot.client",
+  id = nil,
+  capabilities = nil,
+  config = nil,
 }
 
+---@param id number
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
@@ -144,7 +147,14 @@ M.merge_server_opts = function(params)
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
-    on_init = function(client)
+    get_language_id = function(_, filetype)
+      return util.language_for_file_type(filetype)
+    end,
+    on_init = function(client, initialize_result)
+      if M.id == client.id then
+        M.capabilities = initialize_result.capabilities
+      end
+
       vim.schedule(function()
         ---@type copilot_set_editor_info_params
         local set_editor_info_params = util.get_editor_info()
@@ -153,8 +163,18 @@ M.merge_server_opts = function(params)
           .. M.get_node_version()
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
-        api.set_editor_info(client, set_editor_info_params)
+        api.set_editor_info(client, set_editor_info_params, function(err)
+          if err then
+            vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
+          end
+        end)
       end)
+    end,
+    on_exit = function(_code, _signal, client_id)
+      if M.id == client_id then
+        M.id = nil
+        M.capabilities = nil
+      end
     end,
     handlers = {
       PanelSolution = api.handlers.PanelSolution,
@@ -199,7 +219,6 @@ function M.teardown()
 
   if M.id then
     vim.lsp.stop_client(M.id)
-    M.id = nil
   end
 end
 

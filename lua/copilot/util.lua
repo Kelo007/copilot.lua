@@ -37,24 +37,6 @@ function M.get_copilot_lua_version()
   return copilot_lua_version
 end
 
--- keep for debugging reasons
-local get_capabilities = function()
-  return {
-    capabilities = {
-      textDocumentSync = {
-        change = 2,
-        openClose = true,
-      },
-      workspace = {
-        workspaceFolders = {
-          changeNotifications = true,
-          supported = true,
-        },
-      },
-    },
-  }
-end
-
 -- use `require("copilot.client").get()`
 ---@deprecated
 M.get_copilot_client = function()
@@ -155,7 +137,7 @@ local language_normalization_map = {
   text = "plaintext",
 }
 
-local function language_for_file_type(filetype)
+function M.language_for_file_type(filetype)
   -- trim filetypes after dot, e.g. `yaml.gotexttmpl` -> `yaml`
   local ft = string.gsub(filetype, "%..*", "")
   if not ft or ft == "" then
@@ -177,7 +159,6 @@ function M.get_doc()
   local params = vim.lsp.util.make_position_params(0, "utf-16") -- copilot server uses utf-16
   local doc = {
     uri = params.textDocument.uri,
-    languageId = language_for_file_type(vim.bo.filetype),
     version = vim.api.nvim_buf_get_var(0, "changedtick"),
     relativePath = relative_path(absolute),
     insertSpaces = vim.o.expandtab,
@@ -197,7 +178,6 @@ function M.get_doc_params(overrides)
   }, overrides)
   params.textDocument = {
     uri = params.doc.uri,
-    languageId = params.doc.languageId,
     version = params.doc.version,
     relativePath = params.doc.relativePath,
   }
